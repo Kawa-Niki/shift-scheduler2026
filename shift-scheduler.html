@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>シフト自動作成アプリ</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Zen Kaku Gothic New', 'Noto Sans JP', sans-serif;
+            background: #F5F9FB;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #008ac8 0%, #f3ed4c 100%);
+            color: #1a1a1a;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2em;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-shadow: 0 2px 4px rgba(255, 255, 255, 0.3);
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #008ac8;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #008ac8;
+        }
+
+        .month-selector {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .month-selector input {
+            flex: 1;
+            padding: 12px;
+            font-size: 1em;
+            border: 2px solid #b3d9ec;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .month-selector input:focus {
+            outline: none;
+            border-color: #008ac8;
+            box-shadow: 0 0 0 3px rgba(0, 138, 200, 0.1);
+        }
+
+        .staff-input {
+            background: #ffffff;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            border: 2px solid #b3d9ec;
+            transition: all 0.3s;
+        }
+
+        .staff-input:hover {
+            border-color: #008ac8;
+            box-shadow: 0 2px 8px rgba(0, 138, 200, 0.1);
+        }
+
+        .staff-row {
+            display: grid;
+            grid-template-columns: 200px 100px 1fr 1fr auto;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .staff-input input[type="text"],
+        .staff-input input[type="number"] {
+            padding: 10px;
+            border: 2px solid #b3d9ec;
+            border-radius: 6px;
+            font-size: 0.95em;
+            transition: all 0.3s;
+        }
+
+        .staff-input input[type="number"] {
+            text-align: center;
+            font-weight: 600;
+            color: #008ac8;
+        }
+
+        .staff-input input[type="text"]:focus,
+        .staff-input input[type="number"]:focus {
+            outline: none;
+            border-color: #008ac8;
+            box-shadow: 0 0 0 3px rgba(0, 138, 200, 0.1);
+        }
+
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: white;
+            border-radius: 6px;
+            white-space: nowrap;
+        }
+
+        .checkbox-container input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .checkbox-container label {
+            font-size: 0.9em;
+            color: #3a3a3a;
+            cursor: pointer;
+        }
+
+        .remove-btn {
+            background: #f3ed4c;
+            color: #1a1a1a;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .remove-btn:hover {
+            background: #ede342;
+            transform: scale(1.05);
+        }
+
+        .add-staff-btn {
+            background: #008ac8;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+
+        .add-staff-btn:hover {
+            background: #007ab3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 138, 200, 0.3);
+        }
+
+        .generate-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #008ac8 0%, #f3ed4c 100%);
+            color: #1a1a1a;
+            border: none;
+            padding: 18px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1.2em;
+            font-weight: 700;
+            transition: all 0.3s;
+            margin: 20px 0;
+            text-shadow: 0 1px 2px rgba(255, 255, 255, 0.3);
+        }
+
+        .generate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 138, 200, 0.4);
+        }
+
+        .generate-btn:active {
+            transform: translateY(0);
+        }
+
+        #result {
+            margin-top: 30px;
+        }
+
+        .warning {
+            background: #fffbeb;
+            border-left: 4px solid #f3ed4c;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+        }
+
+        .warning h3 {
+            color: #1a1a1a;
+            margin-bottom: 10px;
+        }
+
+        .warning ul {
+            margin-left: 20px;
+            color: #3a3a3a;
+        }
+
+        .shift-table-container {
+            overflow-x: auto;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .shift-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        .shift-table th,
+        .shift-table td {
+            padding: 12px;
+            text-align: center;
+            border: 1px solid #b3d9ec;
+        }
+
+        .shift-table th {
+            background: linear-gradient(135deg, #008ac8 0%, #f3ed4c 100%);
+            color: #1a1a1a;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .shift-table tr:nth-child(even) {
+            background: #f9fcfd;
+        }
+
+        .shift-table tr:hover {
+            background: #e6f4f9;
+        }
+
+        .shift-table .name-cell {
+            font-weight: 600;
+            background: #f0f7fb;
+            text-align: left;
+            padding-left: 20px;
+        }
+
+        .shift-table .work-day {
+            color: #008ac8;
+            font-weight: 600;
+        }
+
+        .shift-table .off-day {
+            color: #2a2a2a;
+            font-weight: 600;
+        }
+
+        .shift-table .weekend {
+            background: #fffef0;
+        }
+
+        .shift-table .holiday {
+            background: #fffacd;
+        }
+
+        .download-btn {
+            background: #008ac8;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            margin-top: 20px;
+            transition: all 0.3s;
+        }
+
+        .download-btn:hover {
+            background: #007ab3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 138, 200, 0.3);
+        }
+
+        .helper-text {
+            font-size: 0.85em;
+            color: #4a4a4a;
+            margin-top: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .staff-row {
+                grid-template-columns: 1fr;
+            }
+
+            .month-selector {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🗓️ シフト自動作成アプリ</h1>
+        </div>
+        
+        <div class="content">
+            <!-- 対象月選択 -->
+            <div class="section">
+                <div class="section-title">📅 対象月</div>
+                <div class="month-selector">
+                    <input type="month" id="targetMonth" value="">
+                </div>
+            </div>
+
+            <!-- スタッフ情報入力 -->
+            <div class="section">
+                <div class="section-title">👥 スタッフ情報</div>
+                <div class="helper-text">※ 出勤日数: 月の出勤予定日数を入力（例: 週5勤務なら20日前後、週4勤務なら16日前後）</div>
+                <div class="helper-text">※ 日付はカンマ区切りで入力してください（例: 1,5,10,15）</div>
+                <div id="staffContainer"></div>
+                <button class="add-staff-btn" onclick="addStaff()">➕ スタッフを追加</button>
+            </div>
+
+            <!-- シフト生成ボタン -->
+            <button class="generate-btn" onclick="generateShift()">🚀 シフトを自動生成</button>
+
+            <!-- 結果表示エリア -->
+            <div id="result"></div>
+        </div>
+    </div>
+
+    <script>
+        let staffCount = 0;
+
+        // 初期設定
+        document.addEventListener('DOMContentLoaded', function() {
+            // 今月を初期値に設定
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            document.getElementById('targetMonth').value = `${year}-${month}`;
+
+            // 初期スタッフ3名追加
+            for (let i = 0; i < 3; i++) {
+                addStaff();
+            }
+        });
+
+        function addStaff() {
+            staffCount++;
+            const container = document.getElementById('staffContainer');
+            const staffDiv = document.createElement('div');
+            staffDiv.className = 'staff-input';
+            staffDiv.id = `staff-${staffCount}`;
+            staffDiv.innerHTML = `
+                <div class="staff-row">
+                    <input type="text" placeholder="スタッフ名" class="staff-name">
+                    <input type="number" placeholder="出勤日数" class="work-days" min="1" max="31" value="20" title="月の出勤日数を入力">
+                    <input type="text" placeholder="休日希望日 (例: 1,5,10)" class="off-requests">
+                    <input type="text" placeholder="出勤希望日 (例: 3,8,15)" class="work-requests">
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <div class="checkbox-container">
+                            <input type="checkbox" id="exclude-${staffCount}" class="exclude-weekend">
+                            <label for="exclude-${staffCount}">土日祝除外</label>
+                        </div>
+                        <button class="remove-btn" onclick="removeStaff(${staffCount})">削除</button>
+                    </div>
+                </div>
+            `;
+            container.appendChild(staffDiv);
+        }
+
+        function removeStaff(id) {
+            const staff = document.getElementById(`staff-${id}`);
+            if (staff) {
+                staff.remove();
+            }
+        }
+
+        function parseDate(input) {
+            if (!input || input.trim() === '') return [];
+            return input.split(',').map(d => parseInt(d.trim())).filter(d => !isNaN(d) && d > 0);
+        }
+
+        function getHolidays(year, month) {
+            // 日本の祝日（簡易版）
+            const holidays = {
+                '1-1': '元日',
+                '1-2': '休日',
+                '2-11': '建国記念の日',
+                '2-23': '天皇誕生日',
+                '3-20': '春分の日',
+                '4-29': '昭和の日',
+                '5-3': '憲法記念日',
+                '5-4': 'みどりの日',
+                '5-5': 'こどもの日',
+                '7-3': '海の日',
+                '8-11': '山の日',
+                '9-3': '敬老の日',
+                '9-23': '秋分の日',
+                '10-2': 'スポーツの日',
+                '11-3': '文化の日',
+                '11-23': '勤労感謝の日'
+            };
+
+            const daysInMonth = new Date(year, month, 0).getDate();
+            const result = [];
+
+            for (let day = 1; day <= daysInMonth; day++) {
+                const date = new Date(year, month - 1, day);
+                const dayOfWeek = date.getDay();
+                const key = `${month}-${day}`;
+
+                if (dayOfWeek === 0 || dayOfWeek === 6 || holidays[key]) {
+                    result.push(day);
+                }
+            }
+
+            return result;
+        }
+
+        function generateShift() {
+            const monthInput = document.getElementById('targetMonth').value;
+            if (!monthInput) {
+                alert('対象月を選択してください');
+                return;
+            }
+
+            const [year, month] = monthInput.split('-').map(Number);
+            const daysInMonth = new Date(year, month, 0).getDate();
+
+            // スタッフ情報を取得
+            const staffElements = document.querySelectorAll('.staff-input');
+            const staffData = [];
+
+            staffElements.forEach(element => {
+                const name = element.querySelector('.staff-name').value.trim();
+                if (!name) return;
+
+                const workDays = parseInt(element.querySelector('.work-days').value) || 20;
+                const offRequests = parseDate(element.querySelector('.off-requests').value);
+                const workRequests = parseDate(element.querySelector('.work-requests').value);
+                const excludeWeekend = element.querySelector('.exclude-weekend').checked;
+
+                staffData.push({
+                    name,
+                    workDays,
+                    offRequests,
+                    workRequests,
+                    excludeWeekend,
+                    schedule: new Array(daysInMonth).fill(null),
+                    actualWorkDays: 0
+                });
+            });
+
+            if (staffData.length === 0) {
+                alert('スタッフ情報を入力してください');
+                return;
+            }
+
+            // 土日祝を取得
+            const weekendsHolidays = getHolidays(year, month);
+
+            // シフト生成
+            const warnings = [];
+            
+            // ステップ1: 全スタッフのスケジュールを初期化（全て未定）
+            staffData.forEach(staff => {
+                staff.schedule = new Array(daysInMonth).fill(null);
+                staff.actualWorkDays = 0;
+            });
+
+            // ステップ2: 絶対休みを設定
+            staffData.forEach(staff => {
+                staff.offRequests.forEach(day => {
+                    if (day >= 1 && day <= daysInMonth) {
+                        staff.schedule[day - 1] = '休';
+                    }
+                });
+            });
+
+            // ステップ3: 絶対出勤を設定
+            staffData.forEach(staff => {
+                staff.workRequests.forEach(day => {
+                    if (day >= 1 && day <= daysInMonth && staff.schedule[day - 1] !== '休') {
+                        staff.schedule[day - 1] = '〇';
+                        staff.actualWorkDays++;
+                    }
+                });
+            });
+
+            // ステップ4: 土日祝のシフトを割り当て（1名のみ）
+            weekendsHolidays.forEach(day => {
+                // 既に出勤希望で誰かが埋まっているかチェック
+                const workRequested = staffData.filter(s => s.schedule[day - 1] === '〇');
+                
+                if (workRequested.length > 1) {
+                    // 複数人が出勤希望の場合は警告
+                    warnings.push(`${day}日(土日祝): 複数名が出勤希望です。1名のみ割り当てます`);
+                    // 最初の1名以外を未定に戻す
+                    for (let i = 1; i < workRequested.length; i++) {
+                        workRequested[i].schedule[day - 1] = null;
+                        workRequested[i].actualWorkDays--;
+                    }
+                }
+
+                if (workRequested.length === 1) {
+                    // 既に1名確定している場合、他全員を休みに
+                    staffData.forEach(staff => {
+                        if (staff !== workRequested[0] && staff.schedule[day - 1] === null) {
+                            staff.schedule[day - 1] = '休';
+                        }
+                    });
+                    return;
+                }
+
+                // 誰も出勤希望していない場合、自動割り当て
+                const availableStaff = staffData.filter(s => 
+                    !s.excludeWeekend && 
+                    s.schedule[day - 1] !== '休'
+                );
+
+                if (availableStaff.length === 0) {
+                    warnings.push(`${day}日(土日祝): 出勤可能なスタッフがいません`);
+                    // 全員休みに設定
+                    staffData.forEach(staff => {
+                        if (staff.schedule[day - 1] === null) {
+                            staff.schedule[day - 1] = '休';
+                        }
+                    });
+                    return;
+                }
+
+                // 土日祝出勤が最も少ない人を選ぶ
+                const weekendCounts = availableStaff.map(s => {
+                    const count = s.schedule.filter((d, i) => 
+                        weekendsHolidays.includes(i + 1) && d === '〇'
+                    ).length;
+                    return { staff: s, count };
+                });
+                weekendCounts.sort((a, b) => a.count - b.count);
+                const assignedStaff = weekendCounts[0].staff;
+
+                // 1名を出勤に、他全員を休みに
+                assignedStaff.schedule[day - 1] = '〇';
+                assignedStaff.actualWorkDays++;
+
+                staffData.forEach(staff => {
+                    if (staff !== assignedStaff && staff.schedule[day - 1] === null) {
+                        staff.schedule[day - 1] = '休';
+                    }
+                });
+            });
+
+            // ステップ5: 各スタッフの出勤可能日数を計算
+            staffData.forEach(staff => {
+                // 休み希望日の数をカウント
+                const requestedOffDays = staff.offRequests.filter(day => day >= 1 && day <= daysInMonth).length;
+                
+                // 出勤可能な最大日数 = 月の日数 - 休み希望日
+                const maxPossibleWorkDays = daysInMonth - requestedOffDays;
+                
+                // 指定出勤日数が実現不可能な場合は警告
+                if (staff.workDays > maxPossibleWorkDays) {
+                    warnings.push(`${staff.name}: 休み希望${requestedOffDays}日のため、出勤日数${staff.workDays}日は実現できません（最大${maxPossibleWorkDays}日）`);
+                }
+            });
+
+            // ステップ6: 週単位で勤務日数を調整しながら平日を埋める
+            staffData.forEach(staff => {
+                const weeklyTargetDays = Math.round(staff.workDays / 4.3); // 月の出勤日数から週の目標を計算
+                
+                for (let weekStart = 0; weekStart < daysInMonth; weekStart += 7) {
+                    const weekEnd = Math.min(weekStart + 7, daysInMonth);
+                    
+                    // この週の現在の出勤日数をカウント
+                    let currentWeekWorkDays = 0;
+                    for (let i = weekStart; i < weekEnd; i++) {
+                        if (staff.schedule[i] === '〇') {
+                            currentWeekWorkDays++;
+                        }
+                    }
+
+                    // この週の未定の日を取得（平日と土日祝の両方）
+                    const undecidedDays = [];
+                    for (let i = weekStart; i < weekEnd; i++) {
+                        if (staff.schedule[i] === null) {
+                            undecidedDays.push(i);
+                        }
+                    }
+
+                    // 目標出勤日数に達するまで出勤を追加
+                    let needToAdd = weeklyTargetDays - currentWeekWorkDays;
+                    
+                    // ただし、月全体の出勤日数を超えないように
+                    const remainingDays = staff.workDays - staff.actualWorkDays;
+                    needToAdd = Math.min(needToAdd, remainingDays, undecidedDays.length);
+
+                    for (let i = 0; i < needToAdd && i < undecidedDays.length; i++) {
+                        const idx = undecidedDays[i];
+                        const day = idx + 1;
+                        
+                        // 土日祝は既に処理済みなのでスキップ
+                        if (weekendsHolidays.includes(day)) {
+                            continue;
+                        }
+                        
+                        // 5連勤チェック
+                        let consecutiveCount = 1;
+                        
+                        // 前方チェック
+                        for (let j = idx - 1; j >= 0 && staff.schedule[j] === '〇'; j--) {
+                            consecutiveCount++;
+                        }
+                        // 後方チェック
+                        for (let j = idx + 1; j < daysInMonth && staff.schedule[j] === '〇'; j++) {
+                            consecutiveCount++;
+                        }
+                        
+                        if (consecutiveCount <= 5) {
+                            staff.schedule[idx] = '〇';
+                            staff.actualWorkDays++;
+                        }
+                    }
+                }
+            });
+
+            // ステップ7: まだ出勤日数が足りない場合、未定の日を追加で出勤に
+            staffData.forEach(staff => {
+                const shortage = staff.workDays - staff.actualWorkDays;
+                
+                if (shortage > 0) {
+                    let added = 0;
+                    
+                    // 未定の日を探して出勤に変更
+                    for (let i = 0; i < daysInMonth && added < shortage; i++) {
+                        const day = i + 1;
+                        
+                        // 未定で、かつ土日祝でない日
+                        if (staff.schedule[i] === null && !weekendsHolidays.includes(day)) {
+                            // 5連勤チェック
+                            let consecutiveCount = 1;
+                            
+                            for (let j = i - 1; j >= 0 && staff.schedule[j] === '〇'; j--) {
+                                consecutiveCount++;
+                            }
+                            for (let j = i + 1; j < daysInMonth && staff.schedule[j] === '〇'; j++) {
+                                consecutiveCount++;
+                            }
+                            
+                            if (consecutiveCount <= 5) {
+                                staff.schedule[i] = '〇';
+                                staff.actualWorkDays++;
+                                added++;
+                            }
+                        }
+                    }
+                }
+            });
+
+            // ステップ8: 残りの未定日を休みに設定
+            staffData.forEach(staff => {
+                for (let i = 0; i < daysInMonth; i++) {
+                    if (staff.schedule[i] === null) {
+                        staff.schedule[i] = '休';
+                    }
+                }
+            });
+
+            // ステップ9: 5連勤違反をチェック
+            staffData.forEach(staff => {
+                let consecutiveDays = 0;
+
+                for (let i = 0; i < daysInMonth; i++) {
+                    if (staff.schedule[i] === '〇') {
+                        consecutiveDays++;
+                        if (consecutiveDays > 5) {
+                            const day = i + 1;
+                            if (staff.workRequests.includes(day)) {
+                                warnings.push(`${staff.name}: ${day}日は出勤希望のため5連勤を超えます`);
+                            } else {
+                                warnings.push(`${staff.name}: ${day}日で5連勤を超えています`);
+                            }
+                        }
+                    } else {
+                        consecutiveDays = 0;
+                    }
+                }
+            });
+
+            // ステップ10: 週休2日チェック
+            staffData.forEach(staff => {
+                for (let weekStart = 0; weekStart < daysInMonth; weekStart += 7) {
+                    const weekEnd = Math.min(weekStart + 7, daysInMonth);
+                    const weekSchedule = staff.schedule.slice(weekStart, weekEnd);
+                    const offDays = weekSchedule.filter(d => d === '休').length;
+                    
+                    if (offDays < 2) {
+                        const weekNum = Math.floor(weekStart / 7) + 1;
+                        warnings.push(`${staff.name}: 第${weekNum}週は週休2日を確保できていません（休み${offDays}日）`);
+                    }
+                }
+            });
+
+            // ステップ11: 最終的な出勤日数チェック
+            staffData.forEach(staff => {
+                const difference = staff.actualWorkDays - staff.workDays;
+                
+                if (difference !== 0) {
+                    warnings.push(`${staff.name}: 指定出勤日数${staff.workDays}日に対し、実際は${staff.actualWorkDays}日です（${difference > 0 ? '+' : ''}${difference}日）`);
+                }
+            });
+
+            // 結果を表示
+            displayResult(year, month, staffData, weekendsHolidays, warnings);
+        }
+
+        function displayResult(year, month, staffData, weekendsHolidays, warnings) {
+            const resultDiv = document.getElementById('result');
+            let html = '';
+
+            // 警告表示
+            if (warnings.length > 0) {
+                html += '<div class="warning">';
+                html += '<h3>⚠️ 警告</h3>';
+                html += '<ul>';
+                warnings.forEach(w => {
+                    html += `<li>${w}</li>`;
+                });
+                html += '</ul>';
+                html += '</div>';
+            }
+
+            // シフト表
+            const daysInMonth = new Date(year, month, 0).getDate();
+            html += '<div class="shift-table-container">';
+            html += '<table class="shift-table">';
+            
+            // ヘッダー行1（日付）
+            html += '<tr><th>氏名</th>';
+            for (let day = 1; day <= daysInMonth; day++) {
+                html += `<th>${day}日</th>`;
+            }
+            html += '</tr>';
+
+            // ヘッダー行2（曜日）
+            html += '<tr><th></th>';
+            for (let day = 1; day <= daysInMonth; day++) {
+                const date = new Date(year, month - 1, day);
+                const dayNames = ['日', '月', '火', '水', '木', '金', '土'];
+                const dayName = dayNames[date.getDay()];
+                const isWeekend = weekendsHolidays.includes(day);
+                html += `<th class="${isWeekend ? 'weekend' : ''}">${dayName}</th>`;
+            }
+            html += '</tr>';
+
+            // スタッフごとの行
+            staffData.forEach(staff => {
+                html += '<tr>';
+                html += `<td class="name-cell">${staff.name}</td>`;
+                for (let i = 0; i < daysInMonth; i++) {
+                    const day = i + 1;
+                    const isWeekend = weekendsHolidays.includes(day);
+                    const mark = staff.schedule[i] || '〇';
+                    const cellClass = mark === '〇' ? 'work-day' : 'off-day';
+                    html += `<td class="${isWeekend ? 'weekend' : ''} ${cellClass}">${mark}</td>`;
+                }
+                html += '</tr>';
+            });
+
+            html += '</table>';
+            html += '</div>';
+
+            // CSVダウンロードボタン
+            html += '<button class="download-btn" onclick="downloadCSV()">📥 CSV形式でダウンロード</button>';
+
+            resultDiv.innerHTML = html;
+
+            // CSVデータを保存
+            window.currentShiftData = { year, month, staffData, weekendsHolidays };
+        }
+
+        function downloadCSV() {
+            if (!window.currentShiftData) return;
+
+            const { year, month, staffData, weekendsHolidays } = window.currentShiftData;
+            const daysInMonth = new Date(year, month, 0).getDate();
+
+            let csv = `${month}月\n`;
+            
+            // ヘッダー行（日付）
+            csv += ',';
+            for (let day = 1; day <= daysInMonth; day++) {
+                csv += `${day}日,`;
+            }
+            csv += '\n';
+
+            // ヘッダー行（曜日）
+            csv += ',';
+            for (let day = 1; day <= daysInMonth; day++) {
+                const date = new Date(year, month - 1, day);
+                const dayNames = ['日', '月', '火', '水', '木', '金', '土'];
+                csv += `${dayNames[date.getDay()]},`;
+            }
+            csv += '\n';
+
+            // スタッフごとの行
+            staffData.forEach(staff => {
+                csv += `${staff.name},`;
+                for (let i = 0; i < daysInMonth; i++) {
+                    csv += `${staff.schedule[i] || '〇'},`;
+                }
+                csv += '\n';
+            });
+
+            // BOM付きUTF-8でダウンロード
+            const bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
+            const blob = new Blob([bom, csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `シフト表_${year}年${month}月.csv`;
+            link.click();
+        }
+    </script>
+</body>
+</html>
