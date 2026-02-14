@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>シフト自動作成アプリ</title>
+    <title>シフト自動作成アプリ「キンムナビ」</title>
     <style>
         * {
             margin: 0;
@@ -35,10 +35,19 @@
         }
 
         .header h1 {
-            font-size: 2em;
-            font-weight: 700;
+            font-size: 1.5em;
+            font-weight: 600;
             letter-spacing: 1px;
             text-shadow: 0 2px 4px rgba(255, 255, 255, 0.3);
+            line-height: 1.6;
+        }
+
+        .header .app-name {
+            font-size: 1.8em;
+            font-weight: 800;
+            display: block;
+            margin-top: 5px;
+            letter-spacing: 3px;
         }
 
         .content {
@@ -246,12 +255,21 @@
         }
 
         .shift-table th {
-            background: linear-gradient(135deg, #008ac8 0%, #f3ed4c 100%);
             color: #1a1a1a;
             font-weight: 600;
             position: sticky;
             top: 0;
             z-index: 10;
+        }
+
+        .shift-table .date-header {
+            background: #008ac8;
+            color: white;
+        }
+
+        .shift-table .day-header {
+            background: #f3ed4c;
+            color: #1a1a1a;
         }
 
         .shift-table tr:nth-child(even) {
@@ -285,6 +303,18 @@
 
         .shift-table .holiday {
             background: #fffacd;
+        }
+
+        .shift-table .saturday {
+            background: #e3f2fd;
+        }
+
+        .shift-table .sunday {
+            background: #ffebee;
+        }
+
+        .shift-table .national-holiday {
+            background: #ffcdd2;
         }
 
         .download-btn {
@@ -326,7 +356,10 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🗓️ シフト自動作成アプリ</h1>
+            <h1>
+                シフト自動作成アプリ<br>
+                <span class="app-name">キンムナビ</span>
+            </h1>
         </div>
         
         <div class="content">
@@ -718,12 +751,21 @@
             staffData.forEach(staff => {
                 for (let weekStart = 0; weekStart < daysInMonth; weekStart += 7) {
                     const weekEnd = Math.min(weekStart + 7, daysInMonth);
+                    const weekLength = weekEnd - weekStart;
                     const weekSchedule = staff.schedule.slice(weekStart, weekEnd);
                     const offDays = weekSchedule.filter(d => d === '休').length;
                     
-                    if (offDays < 2) {
+                    // 週の日数が4日未満の場合（月末の短い週）はチェックしない
+                    if (weekLength < 4) {
+                        continue;
+                    }
+                    
+                    // 週の日数が4〜6日の場合は最低1日の休みがあればOK
+                    const requiredOffDays = weekLength >= 7 ? 2 : 1;
+                    
+                    if (offDays < requiredOffDays) {
                         const weekNum = Math.floor(weekStart / 7) + 1;
-                        warnings.push(`${staff.name}: 第${weekNum}週は週休2日を確保できていません（休み${offDays}日）`);
+                        warnings.push(`${staff.name}: 第${weekNum}週は週休${requiredOffDays}日を確保できていません（休み${offDays}日）`);
                     }
                 }
             });
@@ -757,26 +799,44 @@
                 html += '</div>';
             }
 
+            // 日本の祝日判定用
+            const holidays = {
+                '1-1': '元日',
+                '2-11': '建国記念の日',
+                '2-23': '天皇誕生日',
+                '3-20': '春分の日',
+                '4-29': '昭和の日',
+                '5-3': '憲法記念日',
+                '5-4': 'みどりの日',
+                '5-5': 'こどもの日',
+                '7-15': '海の日',
+                '8-11': '山の日',
+                '9-16': '敬老の日',
+                '9-23': '秋分の日',
+                '10-14': 'スポーツの日',
+                '11-3': '文化の日',
+                '11-23': '勤労感謝の日'
+            };
+
             // シフト表
             const daysInMonth = new Date(year, month, 0).getDate();
             html += '<div class="shift-table-container">';
             html += '<table class="shift-table">';
             
-            // ヘッダー行1（日付）
-            html += '<tr><th>氏名</th>';
+            // ヘッダー行1（日付）- ブルー単色
+            html += '<tr><th class="date-header">氏名</th>';
             for (let day = 1; day <= daysInMonth; day++) {
-                html += `<th>${day}日</th>`;
+                html += `<th class="date-header">${day}日</th>`;
             }
             html += '</tr>';
 
-            // ヘッダー行2（曜日）
-            html += '<tr><th></th>';
+            // ヘッダー行2（曜日）- イエロー単色
+            html += '<tr><th class="day-header"></th>';
             for (let day = 1; day <= daysInMonth; day++) {
                 const date = new Date(year, month - 1, day);
                 const dayNames = ['日', '月', '火', '水', '木', '金', '土'];
                 const dayName = dayNames[date.getDay()];
-                const isWeekend = weekendsHolidays.includes(day);
-                html += `<th class="${isWeekend ? 'weekend' : ''}">${dayName}</th>`;
+                html += `<th class="day-header">${dayName}</th>`;
             }
             html += '</tr>';
 
@@ -786,10 +846,23 @@
                 html += `<td class="name-cell">${staff.name}</td>`;
                 for (let i = 0; i < daysInMonth; i++) {
                     const day = i + 1;
-                    const isWeekend = weekendsHolidays.includes(day);
+                    const date = new Date(year, month - 1, day);
+                    const dayOfWeek = date.getDay();
+                    const holidayKey = `${month}-${day}`;
+                    
+                    // 曜日に応じたクラスを設定
+                    let cellClass = '';
+                    if (holidays[holidayKey]) {
+                        cellClass = 'national-holiday'; // 祝日: 薄い赤
+                    } else if (dayOfWeek === 0) {
+                        cellClass = 'sunday'; // 日曜: 薄い赤
+                    } else if (dayOfWeek === 6) {
+                        cellClass = 'saturday'; // 土曜: 薄い青
+                    }
+                    
                     const mark = staff.schedule[i] || '〇';
-                    const cellClass = mark === '〇' ? 'work-day' : 'off-day';
-                    html += `<td class="${isWeekend ? 'weekend' : ''} ${cellClass}">${mark}</td>`;
+                    const workClass = mark === '〇' ? 'work-day' : 'off-day';
+                    html += `<td class="${cellClass} ${workClass}">${mark}</td>`;
                 }
                 html += '</tr>';
             });
@@ -850,3 +923,4 @@
     </script>
 </body>
 </html>
+
