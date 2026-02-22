@@ -292,8 +292,18 @@
             font-weight: 600;
         }
 
+        .shift-table .requested-work-day {
+            color: #10b981;
+            font-weight: 600;
+        }
+
         .shift-table .off-day {
             color: #2a2a2a;
+            font-weight: 600;
+        }
+
+        .shift-table .requested-off-day {
+            color: #10b981;
             font-weight: 600;
         }
 
@@ -342,6 +352,78 @@
             margin-top: 5px;
         }
 
+        .manual-section {
+            margin-bottom: 20px;
+            border: 2px solid #008ac8;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .manual-toggle {
+            background: #008ac8;
+            color: white;
+            padding: 15px 20px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1.1em;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s;
+        }
+
+        .manual-toggle:hover {
+            background: #007ab3;
+        }
+
+        .manual-toggle-icon {
+            font-size: 1.2em;
+            transition: transform 0.3s;
+        }
+
+        .manual-toggle-icon.open {
+            transform: rotate(180deg);
+        }
+
+        .manual-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+            background: #f0f7fb;
+        }
+
+        .manual-content.open {
+            max-height: 600px;
+            transition: max-height 0.5s ease-in;
+        }
+
+        .manual-content-inner {
+            padding: 20px;
+            line-height: 1.8;
+        }
+
+        .manual-content ol {
+            margin-left: 20px;
+            color: #1a1a1a;
+        }
+
+        .manual-content li {
+            margin-bottom: 10px;
+        }
+
+        .manual-tips {
+            background: #fffbeb;
+            border-left: 4px solid #f3ed4c;
+            padding: 15px;
+            margin-top: 15px;
+            border-radius: 5px;
+        }
+
+        .manual-tips strong {
+            color: #008ac8;
+            font-size: 1.1em;
+        }
+
         @media (max-width: 768px) {
             .staff-row {
                 grid-template-columns: 1fr;
@@ -363,6 +445,29 @@
         </div>
         
         <div class="content">
+            <!-- 使い方マニュアル -->
+            <div class="manual-section">
+                <div class="manual-toggle" onclick="toggleManual()">
+                    <span>📖 使い方マニュアル</span>
+                    <span class="manual-toggle-icon" id="manualIcon">▼</span>
+                </div>
+                <div class="manual-content" id="manualContent">
+                    <div class="manual-content-inner">
+                        <ol>
+                            <li><strong>対象月を選択する</strong></li>
+                            <li><strong>スタッフ情報</strong>にスタッフ名、休日日数、休日希望日、出勤希望日を入力する。土日祝出勤をしないスタッフは「土日祝除外」に☑を入れる<br>
+                            「➕ スタッフを追加」ボタンを押すと人数を増やすことができる</li>
+                            <li><strong>「シフトを自動生成」ボタン</strong>を押す</li>
+                            <li><strong>「CSV形式でダウンロード」ボタン</strong>を押せばCSVファイルが生成保存される</li>
+                        </ol>
+                        <div class="manual-tips">
+                            <strong>【Tips】</strong><br>
+                            "6連勤以上"や"休日/出勤不足"などの警告が出る場合がある。その場合は「🔄 別パターンで再生成」を押して様々なパターンを試すのがおすすめ。最もエラーが少ないパターンを見つけて、CSVダウンロード後に手作業で修正するのが結局最短だ。<strong>ガチャを回せ！</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- 対象月選択 -->
             <div class="section">
                 <div class="section-title">📅 対象月</div>
@@ -374,7 +479,7 @@
             <!-- スタッフ情報入力 -->
             <div class="section">
                 <div class="section-title">👥 スタッフ情報</div>
-                <div class="helper-text">※ 出勤日数: 月の出勤予定日数を入力（例: 週5勤務なら20日前後、週4勤務なら16日前後）</div>
+                <div class="helper-text">※ 休日日数: 月の休日予定日数を入力（例: 週5勤務なら10日前後、週4勤務なら14日前後）</div>
                 <div class="helper-text">※ 日付はカンマ区切りで入力してください（例: 1,5,10,15）</div>
                 <div id="staffContainer"></div>
                 <button class="add-staff-btn" onclick="addStaff()">➕ スタッフを追加</button>
@@ -382,6 +487,7 @@
 
             <!-- シフト生成ボタン -->
             <button class="generate-btn" onclick="generateShift()">🚀 シフトを自動生成</button>
+            <button class="generate-btn" onclick="regenerateShift()" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); display: none;" id="regenerateBtn">🔄 別パターンで再生成</button>
 
             <!-- 結果表示エリア -->
             <div id="result"></div>
@@ -414,7 +520,7 @@
             staffDiv.innerHTML = `
                 <div class="staff-row">
                     <input type="text" placeholder="スタッフ名" class="staff-name">
-                    <input type="number" placeholder="出勤日数" class="work-days" min="1" max="31" value="20" title="月の出勤日数を入力">
+                    <input type="number" placeholder="休日日数" class="off-days" min="0" max="31" value="10" title="月の休日日数を入力">
                     <input type="text" placeholder="休日希望日 (例: 1,5,10)" class="off-requests">
                     <input type="text" placeholder="出勤希望日 (例: 3,8,15)" class="work-requests">
                     <div style="display: flex; gap: 10px; align-items: center;">
@@ -479,6 +585,9 @@
         }
 
         function generateShift() {
+            // 再生成ボタンを表示
+            document.getElementById('regenerateBtn').style.display = 'block';
+            
             const monthInput = document.getElementById('targetMonth').value;
             if (!monthInput) {
                 alert('対象月を選択してください');
@@ -496,13 +605,15 @@
                 const name = element.querySelector('.staff-name').value.trim();
                 if (!name) return;
 
-                const workDays = parseInt(element.querySelector('.work-days').value) || 20;
+                const offDays = parseInt(element.querySelector('.off-days').value) || 10;
+                const workDays = daysInMonth - offDays; // 休日日数から出勤日数を計算
                 const offRequests = parseDate(element.querySelector('.off-requests').value);
                 const workRequests = parseDate(element.querySelector('.work-requests').value);
                 const excludeWeekend = element.querySelector('.exclude-weekend').checked;
 
                 staffData.push({
                     name,
+                    offDays,
                     workDays,
                     offRequests,
                     workRequests,
@@ -522,6 +633,7 @@
 
             // シフト生成
             const warnings = [];
+            const infoMessages = [];
             
             // ステップ1: 全スタッフのスケジュールを初期化（全て未定）
             staffData.forEach(staff => {
@@ -548,23 +660,27 @@
                 });
             });
 
-            // ステップ4: 土日祝のシフトを割り当て（1名のみ）
+            // ステップ4: 土日祝のシフトを割り当て（複数名の出勤希望があれば全員出勤）
             weekendsHolidays.forEach(day => {
                 // 既に出勤希望で誰かが埋まっているかチェック
                 const workRequested = staffData.filter(s => s.schedule[day - 1] === '〇');
                 
                 if (workRequested.length > 1) {
-                    // 複数人が出勤希望の場合は警告
-                    warnings.push(`${day}日(土日祝): 複数名が出勤希望です。1名のみ割り当てます`);
-                    // 最初の1名以外を未定に戻す
-                    for (let i = 1; i < workRequested.length; i++) {
-                        workRequested[i].schedule[day - 1] = null;
-                        workRequested[i].actualWorkDays--;
-                    }
+                    // 複数人が出勤希望 → 全員出勤させて、確認メッセージを出す
+                    const names = workRequested.map(s => s.name).join('、');
+                    infoMessages.push(`${day}日(土日祝): 複数名が出勤しています。問題ありませんか？（${names}）`);
+                    
+                    // 他のスタッフは休みに
+                    staffData.forEach(staff => {
+                        if (!workRequested.includes(staff) && staff.schedule[day - 1] === null) {
+                            staff.schedule[day - 1] = '休';
+                        }
+                    });
+                    return;
                 }
 
                 if (workRequested.length === 1) {
-                    // 既に1名確定している場合、他全員を休みに
+                    // 1名が出勤希望 → その人を出勤、他は休み
                     staffData.forEach(staff => {
                         if (staff !== workRequested[0] && staff.schedule[day - 1] === null) {
                             staff.schedule[day - 1] = '休';
@@ -573,7 +689,7 @@
                     return;
                 }
 
-                // 誰も出勤希望していない場合、自動割り当て
+                // 誰も出勤希望していない場合、自動割り当て（1名のみ）
                 const availableStaff = staffData.filter(s => 
                     !s.excludeWeekend && 
                     s.schedule[day - 1] !== '休'
@@ -581,7 +697,6 @@
 
                 if (availableStaff.length === 0) {
                     warnings.push(`${day}日(土日祝): 出勤可能なスタッフがいません`);
-                    // 全員休みに設定
                     staffData.forEach(staff => {
                         if (staff.schedule[day - 1] === null) {
                             staff.schedule[day - 1] = '休';
@@ -590,7 +705,7 @@
                     return;
                 }
 
-                // 土日祝出勤が最も少ない人を選ぶ
+                // 土日祝出勤が最も少ない人を選ぶ（複数いる場合はランダム）
                 const weekendCounts = availableStaff.map(s => {
                     const count = s.schedule.filter((d, i) => 
                         weekendsHolidays.includes(i + 1) && d === '〇'
@@ -598,7 +713,14 @@
                     return { staff: s, count };
                 });
                 weekendCounts.sort((a, b) => a.count - b.count);
-                const assignedStaff = weekendCounts[0].staff;
+                
+                // 最小カウントの人たちを抽出
+                const minCount = weekendCounts[0].count;
+                const candidates = weekendCounts.filter(w => w.count === minCount);
+                
+                // 複数候補がいる場合はランダムに選択
+                const randomIndex = Math.floor(Math.random() * candidates.length);
+                const assignedStaff = candidates[randomIndex].staff;
 
                 // 1名を出勤に、他全員を休みに
                 assignedStaff.schedule[day - 1] = '〇';
@@ -664,50 +786,39 @@
                             continue;
                         }
                         
-                        // 5連勤チェック
-                        let consecutiveCount = 1;
-                        
-                        // 前方チェック
-                        for (let j = idx - 1; j >= 0 && staff.schedule[j] === '〇'; j--) {
-                            consecutiveCount++;
-                        }
-                        // 後方チェック
-                        for (let j = idx + 1; j < daysInMonth && staff.schedule[j] === '〇'; j++) {
-                            consecutiveCount++;
-                        }
-                        
-                        if (consecutiveCount <= 5) {
-                            staff.schedule[idx] = '〇';
-                            staff.actualWorkDays++;
-                        }
+                        staff.schedule[idx] = '〇';
+                        staff.actualWorkDays++;
                     }
                 }
             });
 
-            // ステップ7: まだ出勤日数が足りない場合、未定の日を追加で出勤に
+            // ステップ7: まだ出勤日数が足りない場合、未定の日を追加で出勤に（絶対確保）
             staffData.forEach(staff => {
                 const shortage = staff.workDays - staff.actualWorkDays;
                 
                 if (shortage > 0) {
                     let added = 0;
                     
-                    // 未定の日を探して出勤に変更
+                    // まず未定の平日を探して出勤に変更
                     for (let i = 0; i < daysInMonth && added < shortage; i++) {
                         const day = i + 1;
                         
-                        // 未定で、かつ土日祝でない日
                         if (staff.schedule[i] === null && !weekendsHolidays.includes(day)) {
-                            // 5連勤チェック
-                            let consecutiveCount = 1;
+                            staff.schedule[i] = '〇';
+                            staff.actualWorkDays++;
+                            added++;
+                        }
+                    }
+                    
+                    // まだ足りない場合、自動割り当ての休日を出勤に変更
+                    if (added < shortage) {
+                        for (let i = 0; i < daysInMonth && added < shortage; i++) {
+                            const day = i + 1;
                             
-                            for (let j = i - 1; j >= 0 && staff.schedule[j] === '〇'; j--) {
-                                consecutiveCount++;
-                            }
-                            for (let j = i + 1; j < daysInMonth && staff.schedule[j] === '〇'; j++) {
-                                consecutiveCount++;
-                            }
-                            
-                            if (consecutiveCount <= 5) {
+                            // 自動割り当ての休日（休日希望でない）を出勤に変更
+                            if (staff.schedule[i] === '休' && 
+                                !staff.offRequests.includes(day) &&
+                                !weekendsHolidays.includes(day)) {
                                 staff.schedule[i] = '〇';
                                 staff.actualWorkDays++;
                                 added++;
@@ -780,10 +891,28 @@
             });
 
             // 結果を表示
-            displayResult(year, month, staffData, weekendsHolidays, warnings);
+            displayResult(year, month, staffData, weekendsHolidays, warnings, infoMessages);
         }
 
-        function displayResult(year, month, staffData, weekendsHolidays, warnings) {
+        function regenerateShift() {
+            // 同じ条件で再度シフト生成
+            generateShift();
+        }
+
+        function toggleManual() {
+            const content = document.getElementById('manualContent');
+            const icon = document.getElementById('manualIcon');
+            
+            if (content.classList.contains('open')) {
+                content.classList.remove('open');
+                icon.classList.remove('open');
+            } else {
+                content.classList.add('open');
+                icon.classList.add('open');
+            }
+        }
+
+        function displayResult(year, month, staffData, weekendsHolidays, warnings, infoMessages) {
             const resultDiv = document.getElementById('result');
             let html = '';
 
@@ -794,6 +923,18 @@
                 html += '<ul>';
                 warnings.forEach(w => {
                     html += `<li>${w}</li>`;
+                });
+                html += '</ul>';
+                html += '</div>';
+            }
+
+            // 確認事項表示
+            if (infoMessages.length > 0) {
+                html += '<div class="warning" style="background: #e3f2fd; border-left-color: #008ac8;">';
+                html += '<h3 style="color: #008ac8;">ℹ️ 確認事項</h3>';
+                html += '<ul style="color: #1a1a1a;">';
+                infoMessages.forEach(m => {
+                    html += `<li>${m}</li>`;
                 });
                 html += '</ul>';
                 html += '</div>';
@@ -861,7 +1002,22 @@
                     }
                     
                     const mark = staff.schedule[i] || '〇';
-                    const workClass = mark === '〇' ? 'work-day' : 'off-day';
+                    let workClass;
+                    if (mark === '〇') {
+                        // 出勤が出勤希望日かどうかをチェック
+                        if (staff.workRequests.includes(day)) {
+                            workClass = 'requested-work-day'; // 出勤希望: 緑色
+                        } else {
+                            workClass = 'work-day'; // 自動割り当ての出勤: ブルー
+                        }
+                    } else {
+                        // 休日が休日希望日かどうかをチェック
+                        if (staff.offRequests.includes(day)) {
+                            workClass = 'requested-off-day'; // 休日希望: 緑色
+                        } else {
+                            workClass = 'off-day'; // 自動割り当ての休日: 黒色
+                        }
+                    }
                     html += `<td class="${cellClass} ${workClass}">${mark}</td>`;
                 }
                 html += '</tr>';
@@ -923,4 +1079,3 @@
     </script>
 </body>
 </html>
-
