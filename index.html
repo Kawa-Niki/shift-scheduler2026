@@ -327,6 +327,97 @@
             background: #ffcdd2;
         }
 
+        /* 手動編集モード */
+        .edit-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .edit-mode-btn {
+            background: #f07800;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .edit-mode-btn:hover {
+            background: #d96a00;
+            transform: translateY(-2px);
+        }
+
+        .undo-btn {
+            background: #888;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .undo-btn:hover:not(:disabled) {
+            background: #666;
+            transform: translateY(-2px);
+        }
+
+        .undo-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .done-btn {
+            background: #4caf50;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .done-btn:hover {
+            background: #43a047;
+            transform: translateY(-2px);
+        }
+
+        .edit-mode .shift-table td.editable {
+            cursor: pointer;
+            transition: opacity 0.15s;
+        }
+
+        .edit-mode .shift-table td.editable:hover {
+            opacity: 0.7;
+            outline: 2px solid #008ac8;
+            outline-offset: -2px;
+        }
+
+        .edit-mode-banner {
+            background: #e3f2fd;
+            border-left: 4px solid #008ac8;
+            padding: 10px 15px;
+            border-radius: 6px;
+            color: #008ac8;
+            font-weight: 600;
+            margin-bottom: 10px;
+            display: none;
+        }
+
+        .edit-mode-banner.visible {
+            display: block;
+        }
+
         .download-btn {
             background: #008ac8;
             color: white;
@@ -346,6 +437,83 @@
             box-shadow: 0 4px 12px rgba(0, 138, 200, 0.3);
         }
 
+        /* トースト通知 */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: #323232;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 0.95em;
+            opacity: 0;
+            transition: opacity 0.3s, transform 0.3s;
+            z-index: 2000;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+        .toast.visible {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* 確認モーダル */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-overlay.visible {
+            display: flex;
+        }
+        .modal-box {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 320px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+        .modal-box p {
+            margin-bottom: 20px;
+            font-size: 1em;
+            color: #1a1a1a;
+            line-height: 1.6;
+        }
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        .modal-cancel {
+            background: #ccc;
+            color: #1a1a1a;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+        }
+        .modal-confirm {
+            background: #e57373;
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+        }
+
         .helper-text {
             font-size: 0.85em;
             color: #4a4a4a;
@@ -356,7 +524,6 @@
             margin-bottom: 20px;
             border: 2px solid #008ac8;
             border-radius: 10px;
-            overflow: hidden;
         }
 
         .manual-toggle {
@@ -388,13 +555,14 @@
         .manual-content {
             max-height: 0;
             overflow: hidden;
-            transition: max-height 0.3s ease-out;
+            transition: max-height 0.4s ease-out;
             background: #f0f7fb;
+            border-radius: 0 0 8px 8px;
         }
 
         .manual-content.open {
-            max-height: 600px;
-            transition: max-height 0.5s ease-in;
+            max-height: 2000px;
+            transition: max-height 0.6s ease-in;
         }
 
         .manual-content-inner {
@@ -455,14 +623,24 @@
                     <div class="manual-content-inner">
                         <ol>
                             <li><strong>対象月を選択する</strong></li>
-                            <li><strong>スタッフ情報</strong>にスタッフ名、休日日数、休日希望日、出勤希望日を入力する。土日祝出勤をしないスタッフは「土日祝除外」に☑を入れる<br>
+                            <li><strong>スタッフ情報</strong>にスタッフ名、休日日数、休日希望日、出勤希望日を入力する。<br>
+                            土日祝出勤をしないスタッフは「土日祝除外」に☑を入れる<br>
                             「➕ スタッフを追加」ボタンを押すと人数を増やすことができる</li>
                             <li><strong>「シフトを自動生成」ボタン</strong>を押す</li>
                             <li><strong>「CSV形式でダウンロード」ボタン</strong>を押せばCSVファイルが生成保存される</li>
                         </ol>
+                        <hr style="border:none; border-top:1px solid #b3d9ec; margin: 14px 0;">
+                        <ol start="5">
+                            <li><strong>「✏️ 手動編集モード」ボタン</strong>を押すとシフト表のセルをタップして〇／休を直接切り替えられる。<br>
+                            「↩️ 元に戻す」で1操作ずつ取り消し可能。<br>
+                            編集が終わったら「✅ 編集完了」を押す。CSVダウンロードは編集後の内容で出力される</li>
+                        </ol>
                         <div class="manual-tips">
-                            <strong>【Tips】</strong><br>
-                            "6連勤以上"や"休日/出勤不足"などの警告が出る場合がある。その場合は「🔄 別パターンで再生成」を押して様々なパターンを試すのがおすすめ。最もエラーが少ないパターンを見つけて、CSVダウンロード後に手作業で修正するのが結局最短だ。<strong>ガチャを回せ！</strong>
+                            <strong>【Tips】</strong><br><br>
+                            "6連勤以上"や"休日/出勤不足"などの警告が出る場合がある。<br>
+                            その場合は「🔄 別パターンで再生成」を押して様々なパターンを試すのがおすすめ。<br>
+                            最もエラーが少ないパターンを見つけて、CSVダウンロード後に手作業で修正するのが結局最短だ。<br><br>
+                            <strong style="display:block; text-align:center; font-size:1.3em;">ガチャを回せ！</strong>
                         </div>
                     </div>
                 </div>
@@ -478,7 +656,11 @@
 
             <!-- スタッフ情報入力 -->
             <div class="section">
-                <div class="section-title">👥 スタッフ情報</div>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0;">
+                    <div class="section-title" style="margin-bottom:0; border-bottom:none;">👥 スタッフ情報</div>
+                    <button id="clearStorageBtn" onclick="clearSavedData()" style="display:none; background:#e57373; color:white; border:none; padding:7px 14px; border-radius:6px; cursor:pointer; font-size:0.85em; font-weight:600;">🗑️ 保存データを削除</button>
+                </div>
+                <div style="border-bottom:2px solid #008ac8; margin-bottom:15px; margin-top:10px;"></div>
                 <div class="helper-text">※ 休日日数: 月の休日予定日数を入力（例: 週5勤務なら10日前後、週4勤務なら14日前後）</div>
                 <div class="helper-text">※ 日付はカンマ区切りで入力してください（例: 1,5,10,15）</div>
                 <div id="staffContainer"></div>
@@ -494,6 +676,20 @@
         </div>
     </div>
 
+    <!-- トースト通知 -->
+    <div class="toast" id="toast"></div>
+
+    <!-- 確認モーダル -->
+    <div class="modal-overlay" id="confirmModal">
+        <div class="modal-box">
+            <p>保存されているスタッフ情報を削除しますか？<br>この操作は取り消せません。</p>
+            <div class="modal-buttons">
+                <button class="modal-cancel" onclick="closeModal()">キャンセル</button>
+                <button class="modal-confirm" onclick="confirmClear()">削除する</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         let staffCount = 0;
 
@@ -501,31 +697,40 @@
         document.addEventListener('DOMContentLoaded', function() {
             // 今月を初期値に設定
             const today = new Date();
-            const year = today.getFullYear();
-            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+            const year = nextMonth.getFullYear();
+            const month = String(nextMonth.getMonth() + 1).padStart(2, '0');
             document.getElementById('targetMonth').value = `${year}-${month}`;
 
-            // 初期スタッフ3名追加
-            for (let i = 0; i < 3; i++) {
-                addStaff();
+            // 保存データがあれば復元、なければ初期スタッフ3名追加
+            const saved = loadStaffData();
+            if (saved && saved.length > 0) {
+                saved.forEach(s => addStaff(s));
+                document.getElementById('clearStorageBtn').style.display = '';
+            } else {
+                for (let i = 0; i < 3; i++) {
+                    addStaff();
+                }
             }
         });
 
-        function addStaff() {
+        function addStaff(savedData = null) {
             staffCount++;
             const container = document.getElementById('staffContainer');
             const staffDiv = document.createElement('div');
             staffDiv.className = 'staff-input';
             staffDiv.id = `staff-${staffCount}`;
+            const nameVal = savedData ? savedData.name : '';
+            const excludeChecked = savedData ? (savedData.excludeWeekend ? 'checked' : '') : '';
             staffDiv.innerHTML = `
                 <div class="staff-row">
-                    <input type="text" placeholder="スタッフ名" class="staff-name">
+                    <input type="text" placeholder="スタッフ名" class="staff-name" value="${nameVal}">
                     <input type="number" placeholder="休日日数" class="off-days" min="0" max="31" value="10" title="月の休日日数を入力">
                     <input type="text" placeholder="休日希望日 (例: 1,5,10)" class="off-requests">
                     <input type="text" placeholder="出勤希望日 (例: 3,8,15)" class="work-requests">
                     <div style="display: flex; gap: 10px; align-items: center;">
                         <div class="checkbox-container">
-                            <input type="checkbox" id="exclude-${staffCount}" class="exclude-weekend">
+                            <input type="checkbox" id="exclude-${staffCount}" class="exclude-weekend" ${excludeChecked}>
                             <label for="exclude-${staffCount}">土日祝除外</label>
                         </div>
                         <button class="remove-btn" onclick="removeStaff(${staffCount})">削除</button>
@@ -627,6 +832,10 @@
                 alert('スタッフ情報を入力してください');
                 return;
             }
+
+            // スタッフ名・土日祝除外を自動保存
+            saveStaffData(staffData);
+            document.getElementById('clearStorageBtn').style.display = '';
 
             // 土日祝を取得
             const weekendsHolidays = getHolidays(year, month);
@@ -894,6 +1103,47 @@
             displayResult(year, month, staffData, weekendsHolidays, warnings, infoMessages);
         }
 
+        // ===== ローカルストレージ =====
+        const STORAGE_KEY = 'kinmunavi_staff';
+
+        function saveStaffData(staffData) {
+            const toSave = staffData.map(s => ({
+                name: s.name,
+                excludeWeekend: s.excludeWeekend
+            }));
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
+        }
+
+        function loadStaffData() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                return raw ? JSON.parse(raw) : null;
+            } catch(e) {
+                return null;
+            }
+        }
+
+        function clearSavedData() {
+            document.getElementById('confirmModal').classList.add('visible');
+        }
+
+        function closeModal() {
+            document.getElementById('confirmModal').classList.remove('visible');
+        }
+
+        function confirmClear() {
+            localStorage.removeItem(STORAGE_KEY);
+            closeModal();
+            showToast('保存データを削除しました。次回起動時に反映されます。');
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('visible');
+            setTimeout(() => toast.classList.remove('visible'), 3000);
+        }
+
         function regenerateShift() {
             // 同じ条件で再度シフト生成
             generateShift();
@@ -904,11 +1154,25 @@
             const icon = document.getElementById('manualIcon');
             
             if (content.classList.contains('open')) {
+                // 閉じる: 現在の高さを明示してからアニメーションで0に
+                content.style.maxHeight = content.scrollHeight + 'px';
+                requestAnimationFrame(() => {
+                    content.style.maxHeight = '0';
+                });
                 content.classList.remove('open');
                 icon.classList.remove('open');
             } else {
+                // 開く: scrollHeightで実際のコンテンツ高さに合わせる
                 content.classList.add('open');
+                content.style.maxHeight = content.scrollHeight + 'px';
                 icon.classList.add('open');
+                // アニメーション完了後にmax-heightをnoneにして将来の変化に対応
+                content.addEventListener('transitionend', function handler() {
+                    if (content.classList.contains('open')) {
+                        content.style.maxHeight = 'none';
+                    }
+                    content.removeEventListener('transitionend', handler);
+                });
             }
         }
 
@@ -1018,12 +1282,22 @@
                             workClass = 'off-day'; // 自動割り当ての休日: 黒色
                         }
                     }
-                    html += `<td class="${cellClass} ${workClass}">${mark}</td>`;
+                    html += `<td class="${cellClass} ${workClass} editable" data-staff="${staff.name}" data-day="${i}" onclick="handleCellClick(this)">${mark}</td>`;
                 }
                 html += '</tr>';
             });
 
             html += '</table>';
+            html += '</div>';
+
+            // 編集バナー
+            html += '<div class="edit-mode-banner" id="editBanner">✏️ 手動編集モード：セルをタップして〇／休を切り替えられます</div>';
+
+            // 編集コントロール
+            html += '<div class="edit-controls">';
+            html += '<button class="edit-mode-btn" id="editModeBtn" onclick="toggleEditMode()">✏️ 手動編集モード</button>';
+            html += '<button class="undo-btn" id="undoBtn" onclick="undoEdit()" disabled>↩️ 元に戻す</button>';
+            html += '<button class="done-btn" id="doneBtn" onclick="toggleEditMode()" style="display:none">✅ 編集完了</button>';
             html += '</div>';
 
             // CSVダウンロードボタン
@@ -1033,6 +1307,145 @@
 
             // CSVデータを保存
             window.currentShiftData = { year, month, staffData, weekendsHolidays };
+
+            // 編集履歴をリセット
+            window.editHistory = [];
+        }
+
+        // ===== 手動編集モード =====
+        window.editHistory = [];
+        let isEditMode = false;
+
+        function toggleEditMode() {
+            isEditMode = !isEditMode;
+            const container = document.querySelector('.shift-table-container');
+            const editBtn = document.getElementById('editModeBtn');
+            const doneBtn = document.getElementById('doneBtn');
+            const banner = document.getElementById('editBanner');
+
+            if (isEditMode) {
+                container.classList.add('edit-mode');
+                editBtn.style.display = 'none';
+                doneBtn.style.display = '';
+                banner.classList.add('visible');
+            } else {
+                container.classList.remove('edit-mode');
+                editBtn.style.display = '';
+                doneBtn.style.display = 'none';
+                banner.classList.remove('visible');
+            }
+        }
+
+        function handleCellClick(cell) {
+            if (!isEditMode) return;
+
+            const staffName = cell.dataset.staff;
+            const dayIndex = parseInt(cell.dataset.day);
+            const currentMark = cell.textContent.trim();
+
+            // 履歴に保存
+            window.editHistory.push({
+                cell: cell,
+                staffName: staffName,
+                dayIndex: dayIndex,
+                prevMark: currentMark,
+                prevClass: cell.className
+            });
+            document.getElementById('undoBtn').disabled = false;
+
+            // 〇↔休 トグル
+            const newMark = currentMark === '〇' ? '休' : '〇';
+            cell.textContent = newMark;
+
+            // クラスを更新（出勤希望・休日希望の色は編集時は通常色に）
+            const baseClasses = [...cell.classList].filter(c =>
+                ['saturday', 'sunday', 'national-holiday', 'editable'].includes(c)
+            );
+            cell.className = baseClasses.join(' ') + ' editable ' + (newMark === '〇' ? 'work-day' : 'off-day');
+
+            // currentShiftDataも更新（CSVに反映させるため）
+            if (window.currentShiftData) {
+                const staff = window.currentShiftData.staffData.find(s => s.name === staffName);
+                if (staff) staff.schedule[dayIndex] = newMark;
+            }
+
+            // 警告を再チェック
+            recheckWarnings();
+        }
+
+        function undoEdit() {
+            if (!window.editHistory || window.editHistory.length === 0) return;
+
+            const last = window.editHistory.pop();
+            last.cell.textContent = last.prevMark;
+            last.cell.className = last.prevClass;
+
+            // currentShiftDataも戻す
+            if (window.currentShiftData) {
+                const staff = window.currentShiftData.staffData.find(s => s.name === last.staffName);
+                if (staff) staff.schedule[last.dayIndex] = last.prevMark;
+            }
+
+            // 履歴がなくなったらボタンを無効化
+            if (window.editHistory.length === 0) {
+                document.getElementById('undoBtn').disabled = true;
+            }
+
+            // 警告を再チェック
+            recheckWarnings();
+        }
+
+        function recheckWarnings() {
+            if (!window.currentShiftData) return;
+            const { staffData } = window.currentShiftData;
+            const daysInMonth = window.currentShiftData.staffData[0].schedule.length;
+            const newWarnings = [];
+
+            staffData.forEach(staff => {
+                // 6連勤チェック
+                let consecutive = 0;
+                let maxConsecutive = 0;
+                let maxEndDay = -1;
+                for (let i = 0; i < daysInMonth; i++) {
+                    if (staff.schedule[i] === '〇') {
+                        consecutive++;
+                        if (consecutive > maxConsecutive) {
+                            maxConsecutive = consecutive;
+                            maxEndDay = i + 1;
+                        }
+                    } else {
+                        consecutive = 0;
+                    }
+                }
+                if (maxConsecutive >= 6) {
+                    newWarnings.push(`${staff.name}: ${maxConsecutive}連勤になっています（〜${maxEndDay}日）`);
+                }
+
+                // 出勤日数チェック
+                const actualWorkDays = staff.schedule.filter(d => d === '〇').length;
+                const diff = actualWorkDays - staff.workDays;
+                if (diff !== 0) {
+                    newWarnings.push(`${staff.name}: 指定出勤日数${staff.workDays}日に対し、実際は${actualWorkDays}日です（${diff > 0 ? '+' : ''}${diff}日）`);
+                }
+            });
+
+            // 警告エリアを更新
+            let warningEl = document.getElementById('editWarningBox');
+            if (newWarnings.length > 0) {
+                if (!warningEl) {
+                    warningEl = document.createElement('div');
+                    warningEl.id = 'editWarningBox';
+                    warningEl.className = 'warning';
+                    const banner = document.getElementById('editBanner');
+                    banner.parentNode.insertBefore(warningEl, banner);
+                }
+                warningEl.innerHTML = '<h3>⚠️ 警告（手動編集後）</h3><ul>' +
+                    newWarnings.map(w => `<li>${w}</li>`).join('') + '</ul>';
+            } else {
+                if (warningEl) {
+                    warningEl.innerHTML = '<h3 style="color:#4caf50;">✅ 警告なし</h3>';
+                }
+            }
         }
 
         function downloadCSV() {
